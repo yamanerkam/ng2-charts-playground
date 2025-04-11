@@ -1,0 +1,35 @@
+.canvas-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    border: 2px solid black;
+    background-color: #f9f9f9;
+    height: 200px;
+    width: 95vw;
+    padding: 20px;
+}
+
+canvas {
+    max-height: 500px;
+    max-width: 90vw;
+}
+
+.team-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.team-legend img {
+    height: 20px;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.team-legend div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
