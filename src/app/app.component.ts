@@ -65,12 +65,9 @@ export const zeroLineSegmentsPerBarPlugin: Plugin<'bar'> = {
 @Component({
   selector: 'app-root',
   standalone: true,
-  // Import BaseChartDirective and NgFor for chart rendering and iteration.
   imports: [BaseChartDirective, NgFor,NgStyle],
-  // Inline template: left column with logos and right column with horizontal mini‑charts.
   template: `
-    <!-- Outer container: horizontal layout for logos (left) and charts (right). 
-     We align everything in the center vertically. -->
+
 <div style="display: flex; align-items: center; background-color:#f7f6f6; padding:16px;">
   
   <!-- Left column: BVB & STP logos -->
