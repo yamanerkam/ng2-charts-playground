@@ -219,7 +219,7 @@ export class AppComponent {
         border: { display: false },
         ticks: {
           display: true,
-          color: '#1e2d36',
+          color: '#7B888E',
           font: { size: 12, weight: 'bold' },
           autoSkip: false
         }
