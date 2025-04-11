@@ -14,30 +14,36 @@ import {
   Plugin
 } from 'chart.js';
 import ChartDataLabels, { Context as DataLabelsContext } from 'chartjs-plugin-datalabels';
-import { NgFor } from '@angular/common';
+import { NgFor, NgStyle } from '@angular/common';
 
 Chart.register(CategoryScale, LinearScale, BarController, BarElement, Tooltip, Legend);
 
 export const zeroLineSegmentsPerBarPlugin: Plugin<'bar'> = {
   id: 'zeroLineSegmentsPerBarPlugin',
   afterDatasetsDraw(chart) {
-    const { ctx, chartArea, scales } = chart;
+    const { ctx, chartArea, scales, data } = chart;
     if (!ctx || !scales?.['y']) return;
     const yScale = scales['y'];
     const zeroY = yScale.getPixelForValue(0);
     if (zeroY < chartArea.top || zeroY > chartArea.bottom) return;
     
     ctx.save();
-    ctx.strokeStyle = '#CBD5E1';
+    const defaultStrokeColor = '#b5bfc8';
     ctx.lineWidth = 1;
-    // Adjust these values to control how far the zero line extends.
     const baseExtensionFraction = 10;
     const dynamicFactor = Math.min(chartArea.width / 500, 1);
     const extensionPercentage = baseExtensionFraction * dynamicFactor;
     
     chart.data.datasets.forEach((_, datasetIndex) => {
       const meta = chart.getDatasetMeta(datasetIndex);
-      meta.data.forEach((bar) => {
+      meta.data.forEach((bar,index) => {
+        
+
+        const groupLabel = data.labels?.[index] as string | undefined;
+        const strokeColor = (groupLabel === '45 min. +' || groupLabel === '90 min. +')
+          ? "#ebebea" : defaultStrokeColor;
+        ctx.strokeStyle = strokeColor;
+
         const { x, width } = bar.getProps(['x', 'width'], true);
         const barLeft = x - width / 2;
         const barRight = x + width / 2;
@@ -60,7 +66,7 @@ export const zeroLineSegmentsPerBarPlugin: Plugin<'bar'> = {
   selector: 'app-root',
   standalone: true,
   // Import BaseChartDirective and NgFor for chart rendering and iteration.
-  imports: [BaseChartDirective, NgFor],
+  imports: [BaseChartDirective, NgFor,NgStyle],
   // Inline template: left column with logos and right column with horizontal mini‑charts.
   template: `
     <!-- Outer container: horizontal layout for logos (left) and charts (right). 
@@ -118,6 +124,9 @@ export const zeroLineSegmentsPerBarPlugin: Plugin<'bar'> = {
   ">
     <div 
       *ngFor="let data of singleChartsData" 
+      [ngStyle]="{
+    'margin-right': data?.labels?.[0] === '45 min. +' ? '40px' : '0'
+  }"
       style="width: 100px; height: 250px; border: none; margin: 0; padding: 0;"
     >
       <canvas
