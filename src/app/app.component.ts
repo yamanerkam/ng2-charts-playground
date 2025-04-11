@@ -73,6 +73,65 @@ const horizontalGroupSeparatorPlugin: Plugin<'bar'> = {
   }
 };
 
+// A responsive zero-line plugin drawn for each bar in a 'bar' chart
+const zeroLineSegmentsPerBarPlugin: Plugin<'bar'> = {
+  id: 'zeroLineSegmentsPerBarPlugin',
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    if (!ctx || !scales?.['y']) return;
+
+    const yScale = scales['y'];
+    const zeroY = yScale.getPixelForValue(0);
+
+    // Skip if the zero value is off-chart
+    if (zeroY < chartArea.top || zeroY > chartArea.bottom) return;
+
+    ctx.save();
+    ctx.strokeStyle = '#CBD5E1'; // Zero line color
+    ctx.lineWidth = 1;
+
+    // Calculate a dynamic extension percentage based on the chart width.
+    // Here we use a base fraction of 10% and then scale it by a factor that 
+    // depends on the chart area width (up to a maximum factor of 1).
+    const baseExtensionFraction = 3; // 10% of the bar's width as a base
+    const dynamicFactor = Math.min(chartArea.width / 3000, 1); // Adjust: 500px width gives factor 1
+    const extensionPercentage = baseExtensionFraction * dynamicFactor; 
+    // Loop over each dataset
+    chart.data.datasets.forEach((_, datasetIndex) => {
+      const meta = chart.getDatasetMeta(datasetIndex);
+
+      // Loop over each bar in the dataset
+      meta.data.forEach((bar) => {
+        // Use getProps() to get the up-to-date properties (x and width)
+        const { x, width } = bar.getProps(['x', 'width'], true);
+
+        // Calculate the left and right edges of the bar
+        const barLeft = x - width / 2;
+        const barRight = x + width / 2;
+
+        
+        // Calculate the extension in pixels based on the current bar width
+        const extend = width * extensionPercentage;
+
+        // Calculate the line's start and end positions
+        const lineLeft = barLeft - extend;
+        const lineRight = barRight + extend;
+
+        // Optionally constrain the line within the chartArea
+        const safeLineLeft = Math.max(lineLeft, chartArea.left);
+        const safeLineRight = Math.min(lineRight, chartArea.right);
+        // Draw the zero line segment
+        ctx.beginPath();
+        ctx.moveTo(safeLineLeft, zeroY);
+        ctx.lineTo(safeLineRight, zeroY);
+        ctx.stroke();
+      });
+    });
+
+    ctx.restore();
+  }
+};
+
 
 
 @Component({
@@ -86,7 +145,7 @@ export class AppComponent {
   title = 'ng2-charts-playground';
   public barChartType: ChartType = 'bar';
 
-  public chartPlugins = [ChartDataLabels,zeroLinePlugin];
+  public chartPlugins = [ChartDataLabels,zeroLineSegmentsPerBarPlugin];
 
   public barChartData: ChartData<'bar'> = {
     labels: [
