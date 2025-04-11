@@ -16,12 +16,8 @@ import {
 import ChartDataLabels, { Context as DataLabelsContext } from 'chartjs-plugin-datalabels';
 import { NgFor } from '@angular/common';
 
-// Register necessary Chart.js components
 Chart.register(CategoryScale, LinearScale, BarController, BarElement, Tooltip, Legend);
 
-/* ============================================================
-   Custom Zero Line Plugin: Draws an extended zero line for each bar
-   ============================================================ */
 export const zeroLineSegmentsPerBarPlugin: Plugin<'bar'> = {
   id: 'zeroLineSegmentsPerBarPlugin',
   afterDatasetsDraw(chart) {
@@ -30,12 +26,15 @@ export const zeroLineSegmentsPerBarPlugin: Plugin<'bar'> = {
     const yScale = scales['y'];
     const zeroY = yScale.getPixelForValue(0);
     if (zeroY < chartArea.top || zeroY > chartArea.bottom) return;
+    
     ctx.save();
     ctx.strokeStyle = '#CBD5E1';
     ctx.lineWidth = 1;
+    // Adjust these values to control how far the zero line extends.
     const baseExtensionFraction = 10;
     const dynamicFactor = Math.min(chartArea.width / 500, 1);
     const extensionPercentage = baseExtensionFraction * dynamicFactor;
+    
     chart.data.datasets.forEach((_, datasetIndex) => {
       const meta = chart.getDatasetMeta(datasetIndex);
       meta.data.forEach((bar) => {
@@ -60,51 +59,110 @@ export const zeroLineSegmentsPerBarPlugin: Plugin<'bar'> = {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [BaseChartDirective,NgFor],
+  // Import BaseChartDirective and NgFor for chart rendering and iteration.
+  imports: [BaseChartDirective, NgFor],
+  // Inline template: left column with logos and right column with horizontal mini‑charts.
   template: `
-    <div style="display: flex; flex-wrap: nowrap; gap: 0; overflow-x: auto;">
-      <div 
-        *ngFor="let data of singleChartsData" 
-        style="width: 100px; height: 250px; border: none; margin: 0; padding: 0;">
-        <canvas 
-          baseChart
-          [data]="data"
-          type="bar"
-          [options]="singleChartOptions"
-          [plugins]="singleChartPlugins">
-        </canvas>
-      </div>
+    <!-- Outer container: horizontal layout for logos (left) and charts (right). 
+     We align everything in the center vertically. -->
+<div style="display: flex; align-items: center; background-color:#f7f6f6; padding:16px;">
+  
+  <!-- Left column: BVB & STP logos -->
+  <div style="
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; /* or center, depending on your preference */
+    justify-content: center; 
+    margin-right: 24px; /* space between logos and charts */
+  ">
+    <!-- BVB row -->
+    <div style="
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      margin-bottom: 16px;
+      margin-top: -40px;
+    ">
+          <strong>BVB</strong>
+
+      <img 
+        src="assets/bvp.svg" 
+        alt="BVB" 
+        style="height: 24px; width: auto;"
+      />
     </div>
+
+    <!-- STP row -->
+    <div style="
+      display: flex; 
+      align-items: center; 
+      gap: 12px;
+    ">
+          <strong>STP</strong>
+
+      <img 
+        src="assets/stp.svg" 
+        alt="STP" 
+        style="height: 24px; width: auto;"
+      />
+    </div>
+  </div>
+
+  <!-- Right column: your multiple mini-charts in a horizontal row. -->
+  <div style="
+    flex: 1; 
+    display: flex; 
+    flex-wrap: nowrap; 
+    gap: 0; 
+    overflow-x: auto;
+  ">
+    <div 
+      *ngFor="let data of singleChartsData" 
+      style="width: 100px; height: 250px; border: none; margin: 0; padding: 0;"
+    >
+      <canvas
+        baseChart
+        [data]="data"
+        type="bar"
+        [options]="singleChartOptions"
+        [plugins]="singleChartPlugins"
+      >
+      </canvas>
+    </div>
+  </div>
+</div>
+
   `,
   styles: []
 })
 export class AppComponent {
-  title = 'ng2-charts-playground';
   public barChartType: ChartType = 'bar';
 
+  // Data configuration for 20 time intervals with BVB and STP values.
   public chartConfig = [
-    { label: '1 - 5 min.',      bvb: 2.42, stp: -2.10 },
-    { label: '6 - 10 min.',     bvb: 2.65, stp: -2.32 },
-    { label: '11 - 15 min.',    bvb: 3.10, stp: -2.88 },
-    { label: '16 - 20 min.',    bvb: 2.54, stp: -2.99 },
-    { label: '21 - 25 min.',    bvb: 2.35, stp: -2.20 },
-    { label: '26 - 30 min.',    bvb: 2.65, stp: -2.10 },
-    { label: '31 - 35 min.',    bvb: 3.10, stp: -2.99 },
-    { label: '36 - 40 min.',    bvb: 2.54, stp: -2.20 },
-    { label: '41 - 45 min.',    bvb: 2.35, stp: -2.10 },
-    { label: '45 min. +',       bvb: 2.65, stp: -2.88 },
-    { label: '46 - 50 min.',    bvb: 2.42, stp: -2.10 },
-    { label: '51 - 55 min.',    bvb: 2.65, stp: -2.32 },
-    { label: '56 - 60 min.',    bvb: 3.10, stp: -2.88 },
-    { label: '61 - 65 min.',    bvb: 2.54, stp: -2.99 },
-    { label: '66 - 70 min.',    bvb: 2.35, stp: -2.20 },
-    { label: '71 - 75 min.',    bvb: 2.65, stp: -2.10 },
-    { label: '76 - 80 min.',    bvb: 3.10, stp: -2.99 },
-    { label: '81 - 85 min.',    bvb: 2.54, stp: -2.20 },
-    { label: '86 - 90 min.',    bvb: 2.35, stp: -2.10 },
-    { label: '90 min. +',       bvb: 2.65, stp: -2.88 }
+    { label: '1 - 5 min.',  bvb: 2.42, stp: -2.10 },
+    { label: '6 - 10 min.',  bvb: 2.65, stp: -2.32 },
+    { label: '11 - 15 min.', bvb: 3.10, stp: -2.88 },
+    { label: '16 - 20 min.', bvb: 2.54, stp: -2.99 },
+    { label: '21 - 25 min.', bvb: 2.35, stp: -2.20 },
+    { label: '26 - 30 min.', bvb: 2.65, stp: -2.10 },
+    { label: '31 - 35 min.', bvb: 3.10, stp: -2.99 },
+    { label: '36 - 40 min.', bvb: 2.54, stp: -2.20 },
+    { label: '41 - 45 min.', bvb: 2.35, stp: -2.10 },
+    { label: '45 min. +',    bvb: 2.65, stp: -2.88 },
+    { label: '46 - 50 min.', bvb: 2.42, stp: -2.10 },
+    { label: '51 - 55 min.', bvb: 2.65, stp: -2.32 },
+    { label: '56 - 60 min.', bvb: 3.10, stp: -2.88 },
+    { label: '61 - 65 min.', bvb: 2.54, stp: -2.99 },
+    { label: '66 - 70 min.', bvb: 2.35, stp: -2.20 },
+    { label: '71 - 75 min.', bvb: 2.65, stp: -2.10 },
+    { label: '76 - 80 min.', bvb: 3.10, stp: -2.99 },
+    { label: '81 - 85 min.', bvb: 2.54, stp: -2.20 },
+    { label: '86 - 90 min.', bvb: 2.35, stp: -2.10 },
+    { label: '90 min. +',    bvb: 2.65, stp: -2.88 }
   ];
 
+  // Transform each configuration entry into a ChartData object (each mini-chart).
   public singleChartsData: ChartData<'bar'>[] = this.chartConfig.map(cfg => ({
     labels: [cfg.label],
     datasets: [
@@ -119,9 +177,8 @@ export class AppComponent {
           offset: 70,
           color: (context: DataLabelsContext) => {
             const bvbValue = context.dataset.data[0] as number;
-            const stpValue = Math.abs(
-              context.chart.data.datasets[1].data[0] as number
-            );
+            // Get STP's absolute value for comparison
+            const stpValue = Math.abs(context.chart.data.datasets[1].data[0] as number);
             return bvbValue >= stpValue ? '#1e2d36' : '#7B888E';
           },
           font: { size: 12, weight: 'bold' },
@@ -138,9 +195,7 @@ export class AppComponent {
           align: 'bottom',
           offset: 70,
           color: (context: DataLabelsContext) => {
-            const stpValue = Math.abs(
-              context.chart.data.datasets[1].data[0] as number
-            );
+            const stpValue = Math.abs(context.chart.data.datasets[1].data[0] as number);
             const bvbValue = context.chart.data.datasets[0].data[0] as number;
             return stpValue > bvbValue ? '#1e2d36' : '#7B888E';
           },
@@ -151,6 +206,7 @@ export class AppComponent {
     ]
   }));
 
+  // Chart.js options for each mini-chart.
   public singleChartOptions: ChartOptions<'bar'> = {
     responsive: true,
     maintainAspectRatio: false,
@@ -163,7 +219,7 @@ export class AppComponent {
         border: { display: false },
         ticks: {
           display: true,
-          color: '#959ea2',
+          color: '#1e2d36',
           font: { size: 12, weight: 'bold' },
           autoSkip: false
         }
@@ -187,5 +243,6 @@ export class AppComponent {
     }
   };
 
+  // Shared plugins for every mini-chart.
   public singleChartPlugins = [ChartDataLabels, zeroLineSegmentsPerBarPlugin];
 }
